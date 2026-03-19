@@ -1,47 +1,75 @@
-// 方向
-export type 方向 = "横" | "縦";
-
 // 週番号 (0 = 3月第1週, 51 = 2月最終週)
 export type 週インデックス = number;
 
-// 畝
-export type 畝 = {
-  id: string;
-  名前: string;
-  x: number;    // グリッド列（0-59）
-  y: number;    // グリッド行（0-59）
-  長さ: number; // マス数（n）
-  方向: 方向;
-};
-
-// 野菜プリセット
+// 野菜
 export type 野菜 = {
   id: string;
-  名前: string;
-  アイコンURL: string;
-  色: string;             // タイムラインブロックの背景色（hex）
-  カテゴリ: string;
-  種まき開始週: 週インデックス;
-  種まき終了週: 週インデックス;
-  収穫開始週: 週インデックス;
-  収穫終了週: 週インデックス;
-  標準栽培週数: number;
+  名称: string;
+  色: string;
+  カスタム: boolean;
 };
 
-// 栽培ブロック（タイムライン上の配置）
-export type 栽培ブロック = {
+// イベント
+export type イベント = {
   id: string;
-  畝id: string;
-  野菜id: string;
+  イベント名: string;
   開始週: 週インデックス;
   終了週: 週インデックス;
 };
 
-// ローカルストレージスキーマ
-export type ローカルストレージスキーマ = {
-  バージョン: 1;
-  畝一覧: 畝[];
-  栽培ブロック一覧: 栽培ブロック[];
-  カスタム野菜一覧: 野菜[];
-  最終保存日時: string;
+// スケジュール（タイムラインの1行）
+export type スケジュール = {
+  id: string;
+  野菜id: string;
+  イベント一覧: イベント[];
 };
+
+// タイムライン
+export type タイムライン = {
+  id: string;
+  名前: string;
+  スケジュール一覧: スケジュール[];
+  所有者id: string | null;
+  作成日時: string;
+  最終編集日時: string;
+};
+
+// スケジュールテンプレート
+export type スケジュールテンプレート = {
+  id: string;
+  テンプレート名: string;
+  説明文: string;
+  野菜id: string;
+  イベント一覧: イベント[];
+  タグ一覧: string[];
+  いいね数: number;
+  作成者id: string;
+  作成日時: string;
+};
+
+// ユーザー
+export type ユーザー = {
+  id: string;
+  表示名: string;
+};
+
+// URL共有
+export type 共有リンク = {
+  id: string;
+  タイムラインid: string;
+  発行者Cookie: string;
+  発行者id: string | null;
+  有効期限: string;
+  作成日時: string;
+};
+
+// 定義済みイベント名
+export type 定義済みイベント名 =
+  | "種まき"
+  | "育苗"
+  | "定植"
+  | "追肥"
+  | "収穫"
+  | "土づくり"
+  | "剪定"
+  | "支柱立て";

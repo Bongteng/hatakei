@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -5,6 +6,10 @@ import { Pool } from "pg";
 import { テーブル作成SQL } from "./db/スキーマ.js";
 import { 初期野菜データ } from "./db/シード.js";
 import { 野菜ルーターを作る } from "./routes/野菜.js";
+import { 認証ルーターを作る } from "./routes/認証.js";
+import { 匿名識別 } from "./middleware/匿名識別.js";
+import { 認証任意 } from "./middleware/認証.js";
+import type { 環境変数型 } from "./types.js";
 
 const db = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -15,22 +20,26 @@ const DBを初期化する = async () => {
   if (parseInt(rows[0].count) === 0) {
     for (const 野菜 of 初期野菜データ) {
       await db.query(
-        `INSERT INTO 野菜 (名前, 色, カテゴリ, 種まき開始週, 種まき終了週, 収穫開始週, 収穫終了週, 標準栽培週数)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [野菜.名前, 野菜.色, 野菜.カテゴリ, 野菜.種まき開始週, 野菜.種まき終了週, 野菜.収穫開始週, 野菜.収穫終了週, 野菜.標準栽培週数]
+        `INSERT INTO 野菜 (名称, 色, カスタム) VALUES ($1, $2, FALSE)`,
+        [野菜.名称, 野菜.色]
       );
     }
     console.log(`野菜プリセット ${初期野菜データ.length} 件を投入しました`);
   }
 };
 
-const アプリ = new Hono();
+const アプリ = new Hono<環境変数型>();
 
 アプリ.use(cors({
   origin: process.env.ALLOWED_ORIGIN ?? "http://localhost:5173",
+  credentials: true,
 }));
 
+アプリ.use(匿名識別);
+アプリ.use(認証任意);
+
 アプリ.route("/api/野菜", 野菜ルーターを作る(db));
+アプリ.route("/api/auth", 認証ルーターを作る(db));
 
 アプリ.get("/health", (コンテキスト) => コンテキスト.json({ status: "ok" }));
 
