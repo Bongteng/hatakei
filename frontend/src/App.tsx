@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import "./index.css";
 import { 認証ストアを使う } from "./store/認証ストア";
 import { プリセットストアを使う } from "./store/プリセットストア";
+import { タイムライン } from "./components/timeline/タイムライン";
 
 const APIのベースURL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
@@ -45,8 +46,8 @@ function App() {
           )}
         </div>
       </header>
-      <main className="flex-1 flex items-center justify-center text-gray-400 text-sm">
-        タイムライン（Phase 2で実装）
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <タイムライン />
       </main>
     </div>
   );
