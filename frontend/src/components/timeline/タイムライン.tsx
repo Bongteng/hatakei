@@ -6,15 +6,8 @@ import { 週ラベル列 } from "./週ラベル列";
 import { イベント追加ダイアログ } from "./イベント追加ダイアログ";
 import { スケジュール追加ダイアログ } from "./スケジュール追加ダイアログ";
 import { テンプレート一覧パネル } from "../preset/テンプレート一覧パネル";
-import { 週ラベル列幅, 基準年 } from "../../utils/週変換";
+import { 週ラベル列幅 } from "../../utils/週変換";
 import type { テンプレート応答 } from "../../types";
-
-// 開始月選択の選択肢（2026年1月〜2028年12月）
-const 開始月選択肢 = Array.from({ length: 36 }, (_, i) => {
-  const 年 = 基準年 + Math.floor(i / 12);
-  const 月 = (i % 12) + 1;
-  return { 年, 月, ラベル: `${年}年${月}月` };
-});
 
 export const タイムライン = () => {
   const タイムライン一覧 = タイムラインストアを使う((s) => s.タイムライン一覧);
@@ -25,7 +18,6 @@ export const タイムライン = () => {
   const 表示開始年 = タイムラインストアを使う((s) => s.表示開始年);
   const 表示開始月 = タイムラインストアを使う((s) => s.表示開始月);
   const 開始週インデックス = タイムラインストアを使う((s) => s.開始週インデックス);
-  const 表示開始月を設定する = タイムラインストアを使う((s) => s.表示開始月を設定する);
 
   const アクティブタイムライン = タイムライン一覧.find((tl) => tl.id === アクティブid);
 
@@ -65,10 +57,6 @@ export const タイムライン = () => {
     return <div className="flex-1 flex items-center justify-center text-gray-400">タイムラインがありません</div>;
   }
 
-  const 選択中の開始月インデックス = 開始月選択肢.findIndex(
-    (o) => o.年 === 表示開始年 && o.月 === 表示開始月
-  );
-
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* スクロール全体コンテナ（sticky が効くよう1つにまとめる） */}
@@ -76,24 +64,11 @@ export const タイムライン = () => {
         <div className="inline-flex flex-col min-w-full">
           {/* ─── 上部固定ヘッダー行 ─── */}
           <div className="flex sticky top-0 z-20 bg-white border-b border-gray-300 shadow-sm">
-            {/* 左上コーナー：開始月セレクター */}
+            {/* 左上コーナー（空白） */}
             <div
-              className="shrink-0 sticky left-0 z-30 bg-white border-r border-gray-300 flex items-center px-1"
+              className="shrink-0 sticky left-0 z-30 bg-white border-r border-gray-300"
               style={{ width: 週ラベル列幅, minHeight: 40 }}
-            >
-              <select
-                className="text-xs w-full border rounded px-1 py-0.5"
-                value={選択中の開始月インデックス}
-                onChange={(e) => {
-                  const opt = 開始月選択肢[Number(e.target.value)];
-                  if (opt) 表示開始月を設定する(opt.年, opt.月);
-                }}
-              >
-                {開始月選択肢.map((opt, i) => (
-                  <option key={i} value={i}>{opt.ラベル}</option>
-                ))}
-              </select>
-            </div>
+            />
 
             {/* 野菜名ヘッダー */}
             <野菜名ヘッダー

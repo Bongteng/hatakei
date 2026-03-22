@@ -22,6 +22,7 @@ type タイムラインストア = {
   イベントを追加する: (タイムラインid: string, スケジュールid: string, イベント: Omit<イベント, "id">) => Promise<void>;
   イベントを削除する: (タイムラインid: string, スケジュールid: string, イベントid: string) => Promise<void>;
   イベントを更新する: (タイムラインid: string, スケジュールid: string, イベントid: string, 更新: Partial<Omit<イベント, "id">>) => Promise<void>;
+  スケジュール順序を変更する: (タイムラインid: string, スケジュールids: string[]) => Promise<void>;
 };
 
 const APIのベースURL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -310,6 +311,36 @@ export const タイムラインストアを使う = create<タイムラインス
                 ? { ...s, イベント一覧: s.イベント一覧.map((e) => e.id === イベントid ? 元イベント : e) }
                 : s
             ),
+          })),
+        }));
+      }
+    }
+  },
+
+  スケジュール順序を変更する: async (タイムラインid, スケジュールids) => {
+    const 元一覧 = get().タイムライン一覧.find((t) => t.id === タイムラインid)?.スケジュール一覧;
+
+    // 楽観的更新
+    set((状態) => ({
+      タイムライン一覧: タイムラインを差し替える(状態.タイムライン一覧, タイムラインid, (tl) => ({
+        ...tl,
+        スケジュール一覧: スケジュールids
+          .map((id) => tl.スケジュール一覧.find((s) => s.id === id))
+          .filter((s): s is スケジュール => s !== undefined),
+      })),
+    }));
+
+    try {
+      await api(`/${タイムラインid}/order`, {
+        method: "PUT",
+        body: JSON.stringify({ スケジュールids }),
+      });
+    } catch {
+      if (元一覧) {
+        set((状態) => ({
+          タイムライン一覧: タイムラインを差し替える(状態.タイムライン一覧, タイムラインid, (tl) => ({
+            ...tl,
+            スケジュール一覧: 元一覧,
           })),
         }));
       }
