@@ -1,41 +1,47 @@
-import { 月ヘッダー一覧を生成する, 列幅, 週インデックスを表示列に変換する, 週数合計 } from "../../utils/週変換";
+import type { スケジュール } from "../../types";
+import { スケジュール列幅 } from "../../utils/週変換";
+import { プリセットストアを使う } from "../../store/プリセットストア";
 import { タイムラインストアを使う } from "../../store/タイムラインストア";
 
-const 月ヘッダー一覧 = 月ヘッダー一覧を生成する();
-
 type Props = {
-  野菜名列幅: number;
+  スケジュール一覧: スケジュール[];
+  タイムラインid: string;
 };
 
-export const タイムラインヘッダー = ({ 野菜名列幅 }: Props) => {
-  const 現在週 = タイムラインストアを使う((s) => s.現在週);
-  const 現在列 = 週インデックスを表示列に変換する(現在週);
+export const 野菜名ヘッダー = ({ スケジュール一覧, タイムラインid }: Props) => {
+  const 野菜一覧 = プリセットストアを使う((s) => s.野菜一覧);
+  const スケジュールを削除する = タイムラインストアを使う((s) => s.スケジュールを削除する);
 
   return (
-    <div className="flex shrink-0 border-b border-gray-300 bg-white">
-      <div
-        className="shrink-0 border-r border-gray-300"
-        style={{ width: 野菜名列幅 }}
-      />
-      <div className="relative" style={{ width: 週数合計 * 列幅 }}>
-        {/* 月ラベル */}
-        <div className="flex h-8">
-          {月ヘッダー一覧.map((月) => (
-            <div
-              key={月.ラベル}
-              className="border-r border-gray-200 text-xs text-gray-600 flex items-center justify-center overflow-hidden"
-              style={{ width: 月.列数 * 列幅 }}
-            >
-              {月.ラベル}
+    <div className="flex">
+      {スケジュール一覧.map((schedule) => {
+        const 野菜 = 野菜一覧.find((v) => v.id === schedule.野菜id);
+        const 野菜名 = 野菜?.名称 ?? "不明";
+        const 野菜色 = 野菜?.色 ?? "#ccc";
+
+        return (
+          <div
+            key={schedule.id}
+            className="shrink-0 border-r border-gray-200 flex items-center justify-between px-1 text-xs bg-white"
+            style={{ width: スケジュール列幅 }}
+          >
+            <div className="flex items-center gap-1 min-w-0">
+              <span
+                className="w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: 野菜色 }}
+              />
+              <span className="truncate">{野菜名}</span>
             </div>
-          ))}
-        </div>
-        {/* 現在週マーカー */}
-        <div
-          className="absolute top-0 bottom-0 w-0.5 bg-red-400 z-10"
-          style={{ left: 現在列 * 列幅 + 列幅 / 2 }}
-        />
-      </div>
+            <button
+              className="text-gray-400 hover:text-red-500 shrink-0 ml-1"
+              onClick={() => スケジュールを削除する(タイムラインid, schedule.id)}
+              title="列を削除"
+            >
+              x
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 };

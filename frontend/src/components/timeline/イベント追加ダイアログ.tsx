@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { 定義済みイベント名 } from "../../types";
+import { 週インデックスを月週表示に変換する, 週数合計 } from "../../utils/週変換";
 
 const 定義済みイベント名一覧: 定義済みイベント名[] = [
   "種まき", "育苗", "定植", "追肥", "収穫", "土づくり", "剪定", "支柱立て",
@@ -7,11 +8,12 @@ const 定義済みイベント名一覧: 定義済みイベント名[] = [
 
 type Props = {
   初期開始週: number;
+  開始週インデックス: number;
   onSubmit: (イベント名: string, 開始週: number, 終了週: number) => void;
   onCancel: () => void;
 };
 
-export const イベント追加ダイアログ = ({ 初期開始週, onSubmit, onCancel }: Props) => {
+export const イベント追加ダイアログ = ({ 初期開始週, 開始週インデックス, onSubmit, onCancel }: Props) => {
   const [イベント名, イベント名を設定する] = useState<string>(定義済みイベント名一覧[0]);
   const [カスタム名, カスタム名を設定する] = useState("");
   const [開始週, 開始週を設定する] = useState(初期開始週);
@@ -52,15 +54,21 @@ export const イベント追加ダイアログ = ({ 初期開始週, onSubmit, o
           />
         )}
 
-        <label className="block text-xs text-gray-500 mb-1">開始週（インデックス）</label>
-        <input
-          type="number"
+        <label className="block text-xs text-gray-500 mb-1">開始週</label>
+        <select
           className="w-full border rounded px-2 py-1 text-sm mb-2"
           value={開始週}
-          min={1}
-          max={156}
           onChange={(e) => 開始週を設定する(Number(e.target.value))}
-        />
+        >
+          {Array.from({ length: 週数合計 }, (_, i) => {
+            const 週インデックス = 開始週インデックス + i;
+            return (
+              <option key={週インデックス} value={週インデックス}>
+                {週インデックスを月週表示に変換する(週インデックス)}
+              </option>
+            );
+          })}
+        </select>
 
         <label className="block text-xs text-gray-500 mb-1">期間（週）</label>
         <input
