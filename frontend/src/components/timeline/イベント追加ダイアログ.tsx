@@ -57,8 +57,8 @@ export const イベント追加ダイアログ = ({ 初期開始週, onSubmit, o
           type="number"
           className="w-full border rounded px-2 py-1 text-sm mb-2"
           value={開始週}
-          min={0}
-          max={155}
+          min={1}
+          max={156}
           onChange={(e) => 開始週を設定する(Number(e.target.value))}
         />
 
