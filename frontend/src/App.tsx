@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import "./index.css";
 import { 認証ストアを使う } from "./store/認証ストア";
 import { プリセットストアを使う } from "./store/プリセットストア";
+import { タイムラインストアを使う } from "./store/タイムラインストア";
 import { タイムライン } from "./components/timeline/タイムライン";
 
 const APIのベースURL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -11,11 +12,13 @@ function App() {
   const 自分を取得する = 認証ストアを使う((s) => s.自分を取得する);
   const ログアウトする = 認証ストアを使う((s) => s.ログアウトする);
   const 野菜を取得する = プリセットストアを使う((s) => s.野菜を取得する);
+  const タイムライン一覧を取得する = タイムラインストアを使う((s) => s.タイムライン一覧を取得する);
 
   useEffect(() => {
     自分を取得する();
     野菜を取得する();
-  }, [自分を取得する, 野菜を取得する]);
+    タイムライン一覧を取得する();
+  }, [自分を取得する, 野菜を取得する, タイムライン一覧を取得する]);
 
   const ログインする = () => {
     window.location.href = `${APIのベースURL}/api/auth/google`;

@@ -410,33 +410,38 @@ CREATE INDEX idx_タイムライン_匿名Cookie ON タイムライン(匿名Coo
 
 #### 2.2.3 APIエンドポイント
 
+注: URLパスは英語を使用する（日本語URLはエンコード問題を避けるため不使用）。
+
 | メソッド | パス | 説明 | 認証 |
 |---|---|---|---|
-| GET | /api/野菜 | 全野菜一覧取得 | 不要 |
-| POST | /api/野菜 | カスタム野菜追加 | 必要 |
-| GET | /api/タイムライン | 自分のタイムライン一覧取得 | 必要 |
-| POST | /api/タイムライン | タイムライン作成 | 不要（匿名可） |
-| GET | /api/タイムライン/:id | タイムライン詳細取得 | 不要 |
-| PUT | /api/タイムライン/:id | タイムライン更新 | 不要（後勝ち） |
-| DELETE | /api/タイムライン/:id | タイムライン削除 | 所有者のみ |
-| POST | /api/タイムライン/:id/スケジュール | スケジュール行追加 | 不要 |
-| PUT | /api/タイムライン/:id/スケジュール/:sid | スケジュール行更新 | 不要 |
-| DELETE | /api/タイムライン/:id/スケジュール/:sid | スケジュール行削除 | 不要 |
-| PUT | /api/タイムライン/:id/並び順 | スケジュール行の並び替え | 不要 |
-| GET | /api/テンプレート | テンプレート一覧（検索対応） | 不要 |
-| POST | /api/テンプレート | テンプレート登録 | 必要 |
-| PUT | /api/テンプレート/:id | テンプレート更新 | 作成者のみ |
-| DELETE | /api/テンプレート/:id | テンプレート削除 | 作成者のみ |
-| POST | /api/テンプレート/:id/いいね | いいね追加 | 必要 |
-| DELETE | /api/テンプレート/:id/いいね | いいね取り消し | 必要 |
-| POST | /api/テンプレート/:id/通報 | テンプレート通報 | 必要 |
-| POST | /api/共有 | 共有リンク発行 | 不要（Cookie制限） |
-| GET | /api/共有/:token | 共有タイムライン取得 | 不要 |
-| GET | /api/認証/google | Google OAuth開始 | - |
-| GET | /api/認証/google/callback | Google OAuthコールバック | - |
-| POST | /api/認証/ログアウト | ログアウト | 必要 |
-| GET | /api/認証/自分 | ログイン中ユーザー情報 | 必要 |
-| GET | /api/エクスポート/:タイムラインid/ics | ICSファイルダウンロード | 不要 |
+| GET | /api/vegetables | 全野菜一覧取得 | 不要 |
+| POST | /api/vegetables | カスタム野菜追加 | 必要 |
+| GET | /api/timelines | 自分のタイムライン一覧取得 | 必要 |
+| POST | /api/timelines | タイムライン作成 | 不要（匿名可） |
+| GET | /api/timelines/:id | タイムライン詳細取得 | 不要 |
+| PUT | /api/timelines/:id | タイムライン更新 | 不要（後勝ち） |
+| DELETE | /api/timelines/:id | タイムライン削除 | 所有者のみ |
+| POST | /api/timelines/:id/schedules | スケジュール行追加 | 不要 |
+| PUT | /api/timelines/:id/schedules/:sid | スケジュール行更新 | 不要 |
+| DELETE | /api/timelines/:id/schedules/:sid | スケジュール行削除 | 不要 |
+| PUT | /api/timelines/:id/order | スケジュール行の並び替え | 不要 |
+| POST | /api/timelines/:id/schedules/:sid/events | イベント追加 | 不要 |
+| PUT | /api/timelines/:id/schedules/:sid/events/:eid | イベント更新 | 不要 |
+| DELETE | /api/timelines/:id/schedules/:sid/events/:eid | イベント削除 | 不要 |
+| GET | /api/templates | テンプレート一覧（検索対応） | 不要 |
+| POST | /api/templates | テンプレート登録 | 必要 |
+| PUT | /api/templates/:id | テンプレート更新 | 作成者のみ |
+| DELETE | /api/templates/:id | テンプレート削除 | 作成者のみ |
+| POST | /api/templates/:id/likes | いいね追加 | 必要 |
+| DELETE | /api/templates/:id/likes | いいね取り消し | 必要 |
+| POST | /api/templates/:id/reports | テンプレート通報 | 必要 |
+| POST | /api/shares | 共有リンク発行 | 不要（Cookie制限） |
+| GET | /api/shares/:token | 共有タイムライン取得 | 不要 |
+| GET | /api/auth/google | Google OAuth開始 | - |
+| GET | /api/auth/google/callback | Google OAuthコールバック | - |
+| POST | /api/auth/logout | ログアウト | 必要 |
+| GET | /api/auth/me | ログイン中ユーザー情報 | 必要 |
+| GET | /api/export/:timelineId/ics | ICSファイルダウンロード | 不要 |
 | POST | /api/エクスポート/:タイムラインid/google | Googleカレンダーエクスポート | 必要（Calendar権限） |
 
 #### 2.2.4 週インデックス仕様

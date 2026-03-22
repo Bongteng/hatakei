@@ -63,6 +63,22 @@ export type 共有リンク = {
   作成日時: string;
 };
 
+// テンプレートAPI応答
+export type テンプレート応答 = {
+  id: string;
+  テンプレート名: string;
+  説明文: string;
+  野菜id: string;
+  作成者id: string;
+  作成日時: string;
+  野菜名称: string;
+  野菜色: string;
+  いいね数: number;
+  イベント一覧: イベント[];
+  タグ一覧: string[];
+  いいね済み: boolean;
+};
+
 // 定義済みイベント名
 export type 定義済みイベント名 =
   | "種まき"

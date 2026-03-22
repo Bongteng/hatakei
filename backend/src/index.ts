@@ -7,6 +7,8 @@ import { テーブル作成SQL } from "./db/スキーマ.js";
 import { 初期野菜データ } from "./db/シード.js";
 import { 野菜ルーターを作る } from "./routes/野菜.js";
 import { 認証ルーターを作る } from "./routes/認証.js";
+import { テンプレートルーターを作る } from "./routes/テンプレート.js";
+import { タイムラインルーターを作る } from "./routes/タイムライン.js";
 import { 匿名識別 } from "./middleware/匿名識別.js";
 import { 認証任意 } from "./middleware/認証.js";
 import type { 環境変数型 } from "./types.js";
@@ -38,8 +40,10 @@ const アプリ = new Hono<環境変数型>();
 アプリ.use(匿名識別);
 アプリ.use(認証任意);
 
-アプリ.route("/api/野菜", 野菜ルーターを作る(db));
+アプリ.route("/api/vegetables", 野菜ルーターを作る(db));
 アプリ.route("/api/auth", 認証ルーターを作る(db));
+アプリ.route("/api/templates", テンプレートルーターを作る(db));
+アプリ.route("/api/timelines", タイムラインルーターを作る(db));
 
 アプリ.get("/health", (コンテキスト) => コンテキスト.json({ status: "ok" }));
 
