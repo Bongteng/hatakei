@@ -88,6 +88,32 @@ export const テンプレート一覧パネル = ({ onSelect, onCancel, on野菜
             >
               新着順
             </button>
+            <button
+              onClick={() => {
+                ソートを設定する("timing");
+                テンプレートを取得する();
+              }}
+              className={`px-2 py-0.5 rounded ${
+                ソート === "timing"
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              開始時期順
+            </button>
+            <button
+              onClick={() => {
+                ソートを設定する("kana");
+                テンプレートを取得する();
+              }}
+              className={`px-2 py-0.5 rounded ${
+                ソート === "kana"
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              五十音順
+            </button>
           </div>
         </div>
 

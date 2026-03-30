@@ -16,11 +16,15 @@ export const テンプレートルーターを作る = (db: Pool) => {
   ルーター.get("/", async (c) => {
     const q = c.req.query("q") ?? "";
     const tag = c.req.query("tag") ?? "";
-    const sort = c.req.query("sort") === "newest" ? "newest" : "likes";
+    const rawSort = c.req.query("sort");
+    const sort = rawSort === "newest" ? "newest"
+      : rawSort === "timing" ? "timing"
+      : rawSort === "kana" ? "kana"
+      : "likes";
     const ユーザーid = c.get("ユーザーid");
 
     // メインクエリ: テンプレート + いいね数 + 野菜情報
-    const orderBy = sort === "newest"
+    const orderBy = sort === "newest" || sort === "timing" || sort === "kana"
       ? "t.作成日時 DESC"
       : "いいね数 DESC, t.作成日時 DESC";
 
@@ -137,6 +141,41 @@ export const テンプレートルーターを作る = (db: Pool) => {
       タグ一覧: タグMap.get(t.id) ?? [],
       いいね済み: いいね済みSet.has(t.id),
     }));
+
+    if (sort === "timing") {
+      const 二月起点週 = 5;
+      const 正規化する = (週: number) => 週 >= 二月起点週 ? 週 : 週 + 52;
+      type ソート用イベント = { id: string; イベント名: string; 開始週: number; 終了週: number };
+
+      const 開始時期を求める = (イベント一覧: ソート用イベント[]): number => {
+        if (イベント一覧.length === 0) return 999;
+
+        const 準備キーワード = ["土づくり", "種まき", "育苗", "定植"];
+        const 準備イベント = イベント一覧.filter((e) =>
+          準備キーワード.some((k) => e.イベント名.includes(k))
+        );
+        if (準備イベント.length > 0) {
+          return Math.min(...準備イベント.map((e) => 正規化する(e.開始週)));
+        }
+
+        const 収穫 = イベント一覧.find((e) => e.イベント名.includes("収穫"));
+        if (収穫) {
+          const 後続 = イベント一覧
+            .filter((e) => e.id !== 収穫.id)
+            .map((e) => ({ ...e, 比較週: e.開始週 > 収穫.終了週 ? e.開始週 : e.開始週 + 52 }))
+            .sort((a, b) => a.比較週 - b.比較週);
+          if (後続.length > 0) return 正規化する(後続[0].開始週);
+        }
+
+        return Math.min(...イベント一覧.map((e) => 正規化する(e.開始週)));
+      };
+
+      結果.sort((a, b) => 開始時期を求める(a.イベント一覧) - 開始時期を求める(b.イベント一覧));
+    }
+
+    if (sort === "kana") {
+      結果.sort((a, b) => a.テンプレート名.localeCompare(b.テンプレート名, "ja"));
+    }
 
     return c.json(結果);
   });

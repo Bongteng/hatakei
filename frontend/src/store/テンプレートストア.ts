@@ -6,12 +6,12 @@ type テンプレートストア = {
   読み込み中: boolean;
   検索キーワード: string;
   検索タグ: string;
-  ソート: "likes" | "newest";
+  ソート: "likes" | "newest" | "timing" | "kana";
 
   テンプレートを取得する: () => Promise<void>;
   検索キーワードを設定する: (キーワード: string) => void;
   検索タグを設定する: (タグ: string) => void;
-  ソートを設定する: (ソート: "likes" | "newest") => void;
+  ソートを設定する: (ソート: "likes" | "newest" | "timing" | "kana") => void;
   いいねを切り替える: (テンプレートid: string) => Promise<void>;
 };
 
@@ -22,7 +22,7 @@ export const テンプレートストアを使う = create<テンプレートス
   読み込み中: false,
   検索キーワード: "",
   検索タグ: "",
-  ソート: "likes" as const,
+  ソート: "timing" as const,
 
   テンプレートを取得する: async () => {
     const { 検索キーワード, 検索タグ, ソート } = get();
