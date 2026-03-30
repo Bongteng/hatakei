@@ -20,11 +20,8 @@ export const テンプレートカード = ({
           className="w-3 h-3 rounded-full shrink-0"
           style={{ backgroundColor: テンプレート.野菜色 }}
         />
-        <span className="text-sm font-medium truncate">
+        <span className="text-sm font-medium ml-auto text-right">
           {テンプレート.テンプレート名}
-        </span>
-        <span className="text-xs text-gray-400 ml-auto shrink-0">
-          {テンプレート.野菜名称}
         </span>
       </div>
 
