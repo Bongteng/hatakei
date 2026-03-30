@@ -143,19 +143,37 @@ export const テンプレートルーターを作る = (db: Pool) => {
     }));
 
     if (sort === "timing") {
-      const 二月起点週 = 5;
-      const 正規化する = (週: number) => 週 >= 二月起点週 ? 週 : 週 + 52;
+      // 月別開始週（frontend/src/utils/週変換.ts と同じ定義）
+      const 月別開始週: Record<number, number> = {
+        1: 1, 2: 6, 3: 10, 4: 14, 5: 19, 6: 23,
+        7: 27, 8: 32, 9: 36, 10: 40, 11: 45, 12: 49,
+      };
+      const 月別週数: Record<number, number> = {
+        1: 5, 2: 4, 3: 4, 4: 5, 5: 4, 6: 4,
+        7: 5, 8: 4, 9: 4, 10: 5, 11: 4, 12: 4,
+      };
+
+      // 現在週（年内1-52）を今日の日付から算出
+      const 今日 = new Date();
+      const 月 = 今日.getMonth() + 1;
+      const 日 = 今日.getDate();
+      const 月の日数 = new Date(今日.getFullYear(), 月, 0).getDate();
+      const 月の週数 = 月別週数[月] ?? 4;
+      const 月内週番号 = Math.min(Math.floor((日 - 1) * 月の週数 / 月の日数), 月の週数 - 1);
+      const 現在週 = (月別開始週[月] ?? 1) + 月内週番号;
+
       type ソート用イベント = { id: string; イベント名: string; 開始週: number; 終了週: number };
 
+      // 開始時期を生の年内週（1-52）で返す
       const 開始時期を求める = (イベント一覧: ソート用イベント[]): number => {
-        if (イベント一覧.length === 0) return 999;
+        if (イベント一覧.length === 0) return -1;
 
         const 準備キーワード = ["土づくり", "種まき", "育苗", "定植"];
         const 準備イベント = イベント一覧.filter((e) =>
           準備キーワード.some((k) => e.イベント名.includes(k))
         );
         if (準備イベント.length > 0) {
-          return Math.min(...準備イベント.map((e) => 正規化する(e.開始週)));
+          return Math.min(...準備イベント.map((e) => e.開始週));
         }
 
         const 収穫 = イベント一覧.find((e) => e.イベント名.includes("収穫"));
@@ -164,13 +182,22 @@ export const テンプレートルーターを作る = (db: Pool) => {
             .filter((e) => e.id !== 収穫.id)
             .map((e) => ({ ...e, 比較週: e.開始週 > 収穫.終了週 ? e.開始週 : e.開始週 + 52 }))
             .sort((a, b) => a.比較週 - b.比較週);
-          if (後続.length > 0) return 正規化する(後続[0].開始週);
+          if (後続.length > 0) return 後続[0].開始週;
         }
 
-        return Math.min(...イベント一覧.map((e) => 正規化する(e.開始週)));
+        return Math.min(...イベント一覧.map((e) => e.開始週));
       };
 
-      結果.sort((a, b) => 開始時期を求める(a.イベント一覧) - 開始時期を求める(b.イベント一覧));
+      // 現在週を起点として未来方向に近い順（過去方向は52週先として扱う）
+      const 近さを求める = (開始週: number): number => {
+        if (開始週 < 0) return 999;
+        return (開始週 - 現在週 + 52) % 52;
+      };
+
+      結果.sort((a, b) =>
+        近さを求める(開始時期を求める(a.イベント一覧)) -
+        近さを求める(開始時期を求める(b.イベント一覧))
+      );
     }
 
     if (sort === "kana") {

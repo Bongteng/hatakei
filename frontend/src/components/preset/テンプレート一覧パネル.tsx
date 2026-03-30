@@ -145,7 +145,7 @@ export const テンプレート一覧パネル = ({ onSelect, onCancel, on野菜
             onClick={on野菜から追加}
             className="w-full text-sm text-blue-500 hover:text-blue-700"
           >
-            野菜を選んで空のスケジュールを追加
+            空のスケジュールを作成
           </button>
           <button
             onClick={onCancel}

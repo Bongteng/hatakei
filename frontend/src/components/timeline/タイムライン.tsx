@@ -78,11 +78,10 @@ export const タイムライン = () => {
 
             {/* + ボタン */}
             <button
-              className="shrink-0 w-10 flex items-center justify-center text-gray-400 hover:text-blue-500 border-l border-gray-200 text-xl"
+              className="shrink-0 px-3 flex items-center justify-center text-sm text-gray-400 hover:text-blue-500 border-l border-gray-200"
               onClick={() => テンプレートパネル表示を設定する(true)}
-              title="野菜を追加"
             >
-              +
+              ＋野菜を追加
             </button>
 
           </div>
