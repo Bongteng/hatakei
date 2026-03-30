@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { テンプレートストアを使う } from "../../store/テンプレートストア";
 import { テンプレートカード } from "./テンプレートカード";
 import type { テンプレート応答 } from "../../types";
@@ -19,26 +19,21 @@ export const テンプレート一覧パネル = ({ onSelect, onCancel, on野菜
   const ソートを設定する = テンプレートストアを使う((s) => s.ソートを設定する);
   const いいねを切り替える = テンプレートストアを使う((s) => s.いいねを切り替える);
 
-  useEffect(() => {
-    テンプレートを取得する();
-  }, [テンプレートを取得する]);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const 検索を実行する = useCallback(() => {
+  useEffect(() => {
     テンプレートを取得する();
   }, [テンプレートを取得する]);
 
   const キーワード変更時 = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       検索キーワードを設定する(e.target.value);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(() => {
+        テンプレートを取得する();
+      }, 300);
     },
-    [検索キーワードを設定する]
-  );
-
-  const キー入力時 = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") 検索を実行する();
-    },
-    [検索を実行する]
+    [検索キーワードを設定する, テンプレートを取得する]
   );
 
   return (
@@ -55,21 +50,14 @@ export const テンプレート一覧パネル = ({ onSelect, onCancel, on野菜
           <h3 className="text-sm font-bold mb-3">テンプレートから追加</h3>
 
           {/* 検索バー */}
-          <div className="flex gap-2 mb-2">
+          <div className="mb-2">
             <input
               type="text"
               placeholder="野菜名・テンプレート名で検索"
               value={検索キーワード}
               onChange={キーワード変更時}
-              onKeyDown={キー入力時}
-              className="flex-1 text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
+              className="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
             />
-            <button
-              onClick={検索を実行する}
-              className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-            >
-              検索
-            </button>
           </div>
 
           {/* ソート */}

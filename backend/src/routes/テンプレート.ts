@@ -3,6 +3,12 @@ import { Pool } from "pg";
 import type { 環境変数型 } from "../types.js";
 import { 認証必須 } from "../middleware/認証.js";
 
+const ひらがなをカタカナに変換する = (str: string): string =>
+  str.replace(/[\u3041-\u3096]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) + 0x60));
+
+const カタカナをひらがなに変換する = (str: string): string =>
+  str.replace(/[\u30A1-\u30F6]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+
 export const テンプレートルーターを作る = (db: Pool) => {
   const ルーター = new Hono<環境変数型>();
 
@@ -23,9 +29,14 @@ export const テンプレートルーターを作る = (db: Pool) => {
     let paramIndex = 1;
 
     if (q) {
-      where += ` AND (t.テンプレート名 ILIKE $${paramIndex} OR v.名称 ILIKE $${paramIndex})`;
-      params.push(`%${q}%`);
-      paramIndex++;
+      // ひらがな・カタカナ双方でヒットするよう両形式を検索
+      const 検索形式一覧 = [...new Set([q, ひらがなをカタカナに変換する(q), カタカナをひらがなに変換する(q)])];
+      const 条件 = 検索形式一覧
+        .map((_, i) => `(t.テンプレート名 ILIKE $${paramIndex + i} OR v.名称 ILIKE $${paramIndex + i})`)
+        .join(" OR ");
+      where += ` AND (${条件})`;
+      検索形式一覧.forEach((形式) => params.push(`%${形式}%`));
+      paramIndex += 検索形式一覧.length;
     }
 
     if (tag) {
