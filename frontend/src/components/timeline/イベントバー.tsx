@@ -10,9 +10,7 @@ type Props = {
   使用サブ列数: number;
   開始週インデックス: number;
   野菜色: string;
-  選択中: boolean;
-  onClick: () => void;
-  onDelete: () => void;
+  onOpen: (e: React.MouseEvent, イベント: イベント) => void;
   onMove: (新開始週: number, 新終了週: number) => void;
 };
 
@@ -22,9 +20,7 @@ export const イベントバー = ({
   使用サブ列数,
   開始週インデックス,
   野菜色,
-  選択中,
-  onClick,
-  onDelete,
+  onOpen,
   onMove,
 }: Props) => {
   const 開始行 = 週インデックスを表示行に変換する(ev.開始週, 開始週インデックス);
@@ -43,6 +39,7 @@ export const イベントバー = ({
   } | null>(null);
   const [ドラッグオフセット, ドラッグオフセットを設定する] = useState(0);
   const [ドラッグ中, ドラッグ中を設定する] = useState(false);
+  const 操作済み = useRef(false);
 
   // リサイズ（下端）
   const リサイズ状態 = useRef<{
@@ -53,7 +50,6 @@ export const イベントバー = ({
   const [リサイズ中, リサイズ中を設定する] = useState(false);
 
   const mouseDown = (e: React.MouseEvent) => {
-    if (選択中) return;
     e.stopPropagation();
     e.preventDefault();
 
@@ -73,6 +69,7 @@ export const イベントバー = ({
       const オフセット行 = Math.round(dy / 行高さ);
 
       if (オフセット行 !== 0) {
+        操作済み.current = true;
         const { 元開始行, 元終了行 } = ドラッグ状態.current;
         const 期間 = 元終了行 - 元開始行;
         const 新開始行 = Math.max(0, Math.min(元開始行 + オフセット行, 週数合計 - 1 - 期間));
@@ -111,6 +108,7 @@ export const イベントバー = ({
       const オフセット行 = Math.round(dy / 行高さ);
 
       if (オフセット行 !== 0) {
+        操作済み.current = true;
         const { 元終了行 } = リサイズ状態.current;
         const 新終了行 = Math.max(開始行, Math.min(元終了行 + オフセット行, 週数合計 - 1));
         onMove(開始行 + 開始週インデックス, 新終了行 + 開始週インデックス);
@@ -134,7 +132,7 @@ export const イベントバー = ({
     <div
       className={`absolute rounded text-xs select-none flex flex-col overflow-hidden ${
         ドラッグ中 ? "shadow-lg z-20 opacity-90" : ""
-      } ${リサイズ中 ? "z-20" : ""} ${選択中 ? "ring-2 ring-blue-400 z-10" : ""}`}
+      } ${リサイズ中 ? "z-20" : ""}`}
       style={{
         top: 表示top,
         height: 表示height,
@@ -146,24 +144,14 @@ export const イベントバー = ({
       onMouseDown={mouseDown}
       onClick={(e) => {
         e.stopPropagation();
-        if (!ドラッグ中 && !リサイズ中) onClick();
+        if (操作済み.current) {
+          操作済み.current = false;
+          return;
+        }
+        onOpen(e, ev);
       }}
     >
-      {/* バツボタン（上端） */}
-      {選択中 && (
-        <button
-          className="shrink-0 text-white/80 hover:text-white font-bold text-xs leading-none text-center"
-          style={{ height: 14 }}
-          onMouseDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-        >
-          x
-        </button>
-      )}
-      <span className="truncate text-white drop-shadow-sm px-0.5 text-center leading-tight flex-1">
+      <span className="break-words text-white drop-shadow-sm px-0.5 text-center leading-tight flex-1 overflow-hidden">
         {ev.イベント名}
       </span>
 

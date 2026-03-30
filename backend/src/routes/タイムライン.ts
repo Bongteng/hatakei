@@ -57,16 +57,16 @@ export const タイムラインルーターを作る = (db: Pool) => {
 
     const スケジュールids = スケジュール結果.rows.map((r: { id: string }) => r.id);
 
-    let イベントMap = new Map<string, { id: string; イベント名: string; 開始週: number; 終了週: number }[]>();
+    let イベントMap = new Map<string, { id: string; イベント名: string; 開始週: number; 終了週: number; コメント: string | null }[]>();
     if (スケジュールids.length > 0) {
       const イベント結果 = await db.query(
-        `SELECT id, スケジュールid, イベント名, 開始週, 終了週
+        `SELECT id, スケジュールid, イベント名, 開始週, 終了週, コメント
          FROM イベント WHERE スケジュールid = ANY($1)`,
         [スケジュールids]
       );
-      for (const row of イベント結果.rows as { id: string; スケジュールid: string; イベント名: string; 開始週: number; 終了週: number }[]) {
+      for (const row of イベント結果.rows as { id: string; スケジュールid: string; イベント名: string; 開始週: number; 終了週: number; コメント: string | null }[]) {
         const list = イベントMap.get(row.スケジュールid) ?? [];
-        list.push({ id: row.id, イベント名: row.イベント名, 開始週: row.開始週, 終了週: row.終了週 });
+        list.push({ id: row.id, イベント名: row.イベント名, 開始週: row.開始週, 終了週: row.終了週, コメント: row.コメント });
         イベントMap.set(row.スケジュールid, list);
       }
     }
@@ -140,7 +140,7 @@ export const タイムラインルーターを作る = (db: Pool) => {
   });
 
   // スケジュール削除
-  ルーター.delete("/:id/スケジュール/:sid", async (c) => {
+  ルーター.delete("/:id/schedules/:sid", async (c) => {
     const タイムラインid = c.req.param("id");
     const スケジュールid = c.req.param("sid");
 
@@ -182,12 +182,12 @@ export const タイムラインルーターを作る = (db: Pool) => {
   ルーター.post("/:id/schedules/:sid/events", async (c) => {
     const タイムラインid = c.req.param("id");
     const スケジュールid = c.req.param("sid");
-    const body = await c.req.json() as { イベント名: string; 開始週: number; 終了週: number };
+    const body = await c.req.json() as { イベント名: string; 開始週: number; 終了週: number; コメント?: string };
 
     const { rows } = await db.query(
-      `INSERT INTO イベント (スケジュールid, イベント名, 開始週, 終了週)
-       VALUES ($1, $2, $3, $4) RETURNING id`,
-      [スケジュールid, body.イベント名, body.開始週, body.終了週]
+      `INSERT INTO イベント (スケジュールid, イベント名, 開始週, 終了週, コメント)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+      [スケジュールid, body.イベント名, body.開始週, body.終了週, body.コメント ?? null]
     );
 
     await db.query(`UPDATE タイムライン SET 最終編集日時 = NOW() WHERE id = $1`, [タイムラインid]);
@@ -197,6 +197,7 @@ export const タイムラインルーターを作る = (db: Pool) => {
       イベント名: body.イベント名,
       開始週: body.開始週,
       終了週: body.終了週,
+      コメント: body.コメント ?? null,
     }, 201);
   });
 
@@ -204,15 +205,16 @@ export const タイムラインルーターを作る = (db: Pool) => {
   ルーター.put("/:id/schedules/:sid/events/:eid", async (c) => {
     const タイムラインid = c.req.param("id");
     const イベントid = c.req.param("eid");
-    const body = await c.req.json() as { イベント名?: string; 開始週?: number; 終了週?: number };
+    const body = await c.req.json() as { イベント名?: string; 開始週?: number; 終了週?: number; コメント?: string | null };
 
     const sets: string[] = [];
-    const params: (string | number)[] = [];
+    const params: (string | number | null)[] = [];
     let idx = 1;
 
     if (body.イベント名 !== undefined) { sets.push(`イベント名 = $${idx++}`); params.push(body.イベント名); }
     if (body.開始週 !== undefined) { sets.push(`開始週 = $${idx++}`); params.push(body.開始週); }
     if (body.終了週 !== undefined) { sets.push(`終了週 = $${idx++}`); params.push(body.終了週); }
+    if (body.コメント !== undefined) { sets.push(`コメント = $${idx++}`); params.push(body.コメント); }
 
     if (sets.length > 0) {
       params.push(イベントid);

@@ -34,6 +34,14 @@ const イベントにサブ列を割り当てる = (
   return 割り当て;
 };
 
+type コメントポップアップ状態 = {
+  イベントid: string;
+  イベント名: string;
+  コメント: string;
+  x: number;
+  y: number;
+};
+
 type Props = {
   スケジュール: スケジュール;
   タイムラインid: string;
@@ -51,7 +59,7 @@ export const スケジュール列 = ({
   表示開始月,
   onイベント追加,
 }: Props) => {
-  const [選択イベントid, 選択イベントidを設定する] = useState<string | null>(null);
+  const [コメントポップアップ, コメントポップアップを設定する] = useState<コメントポップアップ状態 | null>(null);
   const 野菜一覧 = プリセットストアを使う((s) => s.野菜一覧);
   const イベントを削除する = タイムラインストアを使う((s) => s.イベントを削除する);
   const イベントを更新する = タイムラインストアを使う((s) => s.イベントを更新する);
@@ -76,6 +84,15 @@ export const スケジュール列 = ({
 
   const 月ヘッダー一覧 = 月ヘッダー一覧を生成する(表示開始年, 表示開始月);
 
+  // 色付き帯: 最早イベント開始行〜最遅イベント終了行
+  const 帯あり = 表示対象イベント.length > 0;
+  const 帯開始行 = 帯あり
+    ? Math.max(0, Math.min(...表示対象イベント.map((ev) => 週インデックスを表示行に変換する(ev.開始週, 開始週インデックス))))
+    : 0;
+  const 帯終了行 = 帯あり
+    ? Math.min(週数合計 - 1, Math.max(...表示対象イベント.map((ev) => 週インデックスを表示行に変換する(ev.終了週, 開始週インデックス))))
+    : 0;
+
   const 列クリック = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
@@ -84,65 +101,153 @@ export const スケジュール列 = ({
       Math.max(0, Math.min(表示行, 週数合計 - 1)),
       開始週インデックス,
     );
-    選択イベントidを設定する(null);
+    コメントポップアップを設定する(null);
     onイベント追加(schedule.id, 週);
   };
 
+  const バーを開く = (e: React.MouseEvent, ev: イベント) => {
+    コメントポップアップを設定する({
+      イベントid: ev.id,
+      イベント名: ev.イベント名,
+      コメント: ev.コメント ?? "",
+      x: e.clientX,
+      y: e.clientY,
+    });
+  };
+
+  const コメントを保存する = () => {
+    if (!コメントポップアップ) return;
+    イベントを更新する(タイムラインid, schedule.id, コメントポップアップ.イベントid, {
+      コメント: コメントポップアップ.コメント || null,
+    });
+    コメントポップアップを設定する(null);
+  };
+
+  const イベントを削除してポップアップを閉じる = () => {
+    if (!コメントポップアップ) return;
+    イベントを削除する(タイムラインid, schedule.id, コメントポップアップ.イベントid);
+    コメントポップアップを設定する(null);
+  };
+
   return (
-    <div
-      className="relative shrink-0 border-r border-gray-200 cursor-pointer"
-      style={{
-        width: スケジュール列幅,
-        height: 週数合計 * 行高さ,
-        backgroundColor: 野菜色 + "10",
-      }}
-      onClick={列クリック}
-    >
-      {/* 月境界線（水平線） */}
-      {月ヘッダー一覧.map((月) => (
-        <div
-          key={月.ラベル}
-          className="absolute left-0 right-0 border-t border-gray-200"
-          style={{ top: 月.開始行 * 行高さ }}
-        />
-      ))}
-      {/* 週区切り線（薄い水平線） */}
-      {Array.from({ length: 週数合計 }, (_, i) => (
-        <div
-          key={i}
-          className="absolute left-0 right-0 border-t border-gray-100"
-          style={{ top: i * 行高さ }}
-        />
-      ))}
-      {/* 現在週マーカー（水平線） */}
-      {現在行 >= 0 && 現在行 < 週数合計 && (
-        <div
-          className="absolute left-0 right-0 border-t-2 border-red-400/60 z-10"
-          style={{ top: 現在行 * 行高さ + 行高さ / 2 }}
-        />
+    <>
+      <div
+        className="relative shrink-0 border-r border-gray-200 cursor-pointer"
+        style={{
+          width: スケジュール列幅,
+          height: 週数合計 * 行高さ,
+          backgroundColor: "#f9fafb",
+        }}
+        onClick={列クリック}
+      >
+        {/* 色付き帯（最早〜最遅イベント範囲） */}
+        {帯あり && (
+          <div
+            className="absolute left-0 right-0 pointer-events-none"
+            style={{
+              top: 帯開始行 * 行高さ,
+              height: (帯終了行 - 帯開始行 + 1) * 行高さ,
+              backgroundColor: 野菜色 + "25",
+            }}
+          />
+        )}
+        {/* 月境界線（水平線） */}
+        {月ヘッダー一覧.map((月) => (
+          <div
+            key={月.ラベル}
+            className="absolute left-0 right-0 border-t border-gray-200"
+            style={{ top: 月.開始行 * 行高さ }}
+          />
+        ))}
+        {/* 週区切り線（薄い水平線） */}
+        {Array.from({ length: 週数合計 }, (_, i) => (
+          <div
+            key={i}
+            className="absolute left-0 right-0 border-t border-gray-100"
+            style={{ top: i * 行高さ }}
+          />
+        ))}
+        {/* 現在週マーカー（水平線） */}
+        {現在行 >= 0 && 現在行 < 週数合計 && (
+          <div
+            className="absolute left-0 right-0 border-t-2 border-red-400/60 z-10"
+            style={{ top: 現在行 * 行高さ + 行高さ / 2 }}
+          />
+        )}
+        {/* イベントバー（縦） */}
+        {表示対象イベント.map((ev) => (
+          <イベントバー
+            key={ev.id}
+            イベント={ev}
+            サブ列={サブ列割り当て.get(ev.id) ?? 0}
+            使用サブ列数={使用サブ列数}
+            開始週インデックス={開始週インデックス}
+            野菜色={野菜色}
+            onOpen={バーを開く}
+            onMove={(新開始週, 新終了週) => {
+              イベントを更新する(タイムラインid, schedule.id, ev.id, { 開始週: 新開始週, 終了週: 新終了週 });
+            }}
+          />
+        ))}
+      </div>
+
+      {/* コメントポップアップ（fixed） */}
+      {コメントポップアップ && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => コメントポップアップを設定する(null)}
+          />
+          <div
+            className="fixed z-50 bg-white border border-gray-200 rounded shadow-lg p-3 w-64"
+            style={{
+              left: Math.min(コメントポップアップ.x + 8, window.innerWidth - 272),
+              top: Math.min(コメントポップアップ.y + 8, window.innerHeight - 220),
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-xs font-semibold text-gray-700 mb-2 truncate">
+              {コメントポップアップ.イベント名}
+            </div>
+            <textarea
+              className="w-full border border-gray-300 rounded px-2 py-1 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-blue-400"
+              rows={5}
+              maxLength={1000}
+              placeholder="コメントを入力..."
+              value={コメントポップアップ.コメント}
+              onChange={(e) =>
+                コメントポップアップを設定する({ ...コメントポップアップ, コメント: e.target.value })
+              }
+              autoFocus
+            />
+            <div className="text-right text-xs text-gray-400 mb-2">
+              {コメントポップアップ.コメント.length} / 1000
+            </div>
+            <div className="flex justify-between">
+              <button
+                className="text-xs text-red-500 hover:text-red-700 cursor-pointer"
+                onClick={イベントを削除してポップアップを閉じる}
+              >
+                削除
+              </button>
+              <div className="flex gap-2">
+                <button
+                  className="text-xs text-gray-500 hover:text-gray-700 cursor-pointer"
+                  onClick={() => コメントポップアップを設定する(null)}
+                >
+                  キャンセル
+                </button>
+                <button
+                  className="text-xs bg-blue-500 text-white rounded px-2 py-0.5 hover:bg-blue-600 cursor-pointer"
+                  onClick={コメントを保存する}
+                >
+                  保存
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
-      {/* イベントバー（縦） */}
-      {表示対象イベント.map((ev) => (
-        <イベントバー
-          key={ev.id}
-          イベント={ev}
-          サブ列={サブ列割り当て.get(ev.id) ?? 0}
-          使用サブ列数={使用サブ列数}
-          開始週インデックス={開始週インデックス}
-          野菜色={野菜色}
-          選択中={選択イベントid === ev.id}
-          onClick={() =>
-            選択イベントidを設定する(選択イベントid === ev.id ? null : ev.id)
-          }
-          onDelete={() => {
-            イベントを削除する(タイムラインid, schedule.id, ev.id);
-            選択イベントidを設定する(null);
-          }}
-          onMove={(新開始週, 新終了週) => {
-            イベントを更新する(タイムラインid, schedule.id, ev.id, { 開始週: 新開始週, 終了週: 新終了週 });
-          }}
-        />
-      ))}
-    </div>
+    </>
   );
 };

@@ -52,7 +52,8 @@ CREATE TABLE IF NOT EXISTS テンプレートイベント (
   テンプレートid  UUID NOT NULL REFERENCES スケジュールテンプレート(id) ON DELETE CASCADE,
   イベント名      TEXT NOT NULL,
   開始週          SMALLINT NOT NULL,
-  終了週          SMALLINT NOT NULL
+  終了週          SMALLINT NOT NULL,
+  出典            TEXT
 );
 
 CREATE TABLE IF NOT EXISTS テンプレートタグ (
@@ -83,6 +84,11 @@ CREATE TABLE IF NOT EXISTS 共有リンク (
   有効期限        TIMESTAMPTZ NOT NULL,
   作成日時        TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE テンプレートイベント ADD COLUMN IF NOT EXISTS 出典 TEXT;
+ALTER TABLE イベント ADD COLUMN IF NOT EXISTS コメント TEXT;
+ALTER TABLE ユーザー ADD COLUMN IF NOT EXISTS アクセストークン TEXT;
+ALTER TABLE ユーザー ADD COLUMN IF NOT EXISTS リフレッシュトークン TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_スケジュール_タイムライン ON スケジュール(タイムラインid);
 CREATE INDEX IF NOT EXISTS idx_イベント_スケジュール ON イベント(スケジュールid);

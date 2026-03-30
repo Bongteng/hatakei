@@ -1,3 +1,53 @@
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+type テンプレートイベント行 = {
+  イベント名: string;
+  開始週: number;
+  終了週: number;
+  出典: string;
+};
+
+export type テンプレートシード = {
+  テンプレート名: string;
+  野菜名: string;
+  イベント一覧: テンプレートイベント行[];
+};
+
+// CSVからテンプレートシードデータを生成する
+const csvパスを解決する = (): string => {
+  return join(__dirname, "../../../data/スケジュールテンプレート.csv");
+};
+
+export const テンプレートシードデータを読み込む = (): テンプレートシード[] => {
+  const 内容 = readFileSync(csvパスを解決する(), "utf-8");
+  const 行一覧 = 内容.trim().split("\n").slice(1); // ヘッダー除去
+
+  const グループ = new Map<string, テンプレートシード>();
+
+  for (const 行 of 行一覧) {
+    const [野菜名, イベント名, 開始週文字列, 終了週文字列, 出典] = 行.split(",");
+    if (!野菜名 || !イベント名) continue;
+
+    let 開始週 = parseInt(開始週文字列);
+    let 終了週 = parseInt(終了週文字列);
+    if (isNaN(開始週) || isNaN(終了週)) continue;
+
+    // 年境界をまたぐ場合（例: 11月→2月）は終了週に52を加算
+    if (終了週 < 開始週) 終了週 += 52;
+
+    if (!グループ.has(野菜名)) {
+      グループ.set(野菜名, { テンプレート名: 野菜名, 野菜名, イベント一覧: [] });
+    }
+    グループ.get(野菜名)!.イベント一覧.push({ イベント名, 開始週, 終了週, 出典: 出典?.trim() ?? "" });
+  }
+
+  return Array.from(グループ.values());
+};
+
 // 温暖地（中部地方）基準の主要野菜プリセット
 export const 初期野菜データ = [
   { 名称: "トマト",           色: "#e74c3c" },

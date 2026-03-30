@@ -82,7 +82,10 @@ export const 認証ルーターを作る = (db: Pool) => {
       "openid",
       "email",
       "profile",
+      "https://www.googleapis.com/auth/calendar",
     ]);
+    url.searchParams.set("access_type", "offline");
+    url.searchParams.set("prompt", "consent");
 
     setCookie(c, "oauth_state", state, {
       httpOnly: true,
@@ -117,6 +120,7 @@ export const 認証ルーターを作る = (db: Pool) => {
     const google = googleを取得する();
     const tokens = await google.validateAuthorizationCode(code, codeVerifier);
     const accessToken = tokens.accessToken();
+    const refreshToken = tokens.hasRefreshToken() ? tokens.refreshToken() : null;
 
     // UserInfo API呼び出し
     const userInfoレスポンス = await fetch(
@@ -128,12 +132,15 @@ export const 認証ルーターを作る = (db: Pool) => {
       name: string;
     };
 
-    // ユーザーUPSERT
+    // ユーザーUPSERT（リフレッシュトークンは新しく取得した場合のみ上書き）
     await db.query(
-      `INSERT INTO ユーザー (id, 表示名)
-       VALUES ($1, $2)
-       ON CONFLICT (id) DO UPDATE SET 表示名 = $2`,
-      [userInfo.email, userInfo.name]
+      `INSERT INTO ユーザー (id, 表示名, アクセストークン, リフレッシュトークン)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (id) DO UPDATE SET
+         表示名 = $2,
+         アクセストークン = $3,
+         リフレッシュトークン = COALESCE($4, ユーザー.リフレッシュトークン)`,
+      [userInfo.email, userInfo.name, accessToken, refreshToken]
     );
 
     // 匿名タイムラインの引き継ぎ

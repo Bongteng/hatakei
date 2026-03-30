@@ -58,7 +58,7 @@ export const テンプレートルーターを作る = (db: Pool) => {
 
     // イベント取得
     const イベント結果 = await db.query(
-      `SELECT テンプレートid, id, イベント名, 開始週, 終了週
+      `SELECT テンプレートid, id, イベント名, 開始週, 終了週, 出典
        FROM テンプレートイベント
        WHERE テンプレートid = ANY($1)`,
       [ids]
@@ -84,7 +84,7 @@ export const テンプレートルーターを作る = (db: Pool) => {
     }
 
     // マージ
-    type イベント行 = { テンプレートid: string; id: string; イベント名: string; 開始週: number; 終了週: number };
+    type イベント行 = { テンプレートid: string; id: string; イベント名: string; 開始週: number; 終了週: number; 出典: string | null };
     type タグ行 = { テンプレートid: string; タグ: string };
 
     const イベントMap = new Map<string, イベント行[]>();
@@ -121,6 +121,7 @@ export const テンプレートルーターを作る = (db: Pool) => {
         イベント名: e.イベント名,
         開始週: e.開始週,
         終了週: e.終了週,
+        出典: e.出典 ?? "",
       })),
       タグ一覧: タグMap.get(t.id) ?? [],
       いいね済み: いいね済みSet.has(t.id),
